@@ -1,12 +1,20 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Service key client — bypasses RLS, used for all DB operations
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
+// Anon key client — used for Supabase Auth sign-in
+const supabaseAuth = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
 module.exports = {
   supabase,
+  supabaseAuth,
 
   // ─── ADMINS ───────────────────────────────────────────────
   async getAdminByEmail(email) {

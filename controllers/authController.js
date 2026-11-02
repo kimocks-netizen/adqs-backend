@@ -1,44 +1,46 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const db = require('../models/supabaseModel');
+const { supabase, supabaseAuth } = require('../models/supabaseModel');
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({ status: 'error', message: 'Email and password required.' });
+
   try {
-    const { data: admin, error } = await db.getAdminByEmail(email);
-    if (error || !admin)
+    // Sign in via Supabase Auth
+    const { data, error } = await supabaseAuth.auth.signInWithPassword({ email, password });
+    if (error || !data?.session)
       return res.status(401).json({ status: 'error', message: 'Invalid credentials.' });
 
-    const valid = await bcrypt.compare(password, admin.password_hash);
-    if (!valid)
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials.' });
+    // Fetch admin profile from admins table
+    const { data: admin } = await supabase
+      .from('admins')
+      .select('name, role')
+      .eq('email', email.toLowerCase())
+      .single();
 
-    const token = jwt.sign(
-      { id: admin.id, email: admin.email, role: admin.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '8h' }
-    );
-    res.json({ status: 'success', token, data: { name: admin.name, email: admin.email, role: admin.role } });
+    res.json({
+      status: 'success',
+      token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      data: {
+        email: data.user.email,
+        name: admin?.name ?? 'Administrator',
+        role: admin?.role ?? 'administrator',
+      },
+    });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error.' });
   }
 };
 
 exports.changePassword = async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword)
-    return res.status(400).json({ status: 'error', message: 'Both passwords required.' });
+  const { newPassword } = req.body;
+  if (!newPassword)
+    return res.status(400).json({ status: 'error', message: 'New password required.' });
   try {
-    const { data: admin } = await db.getAdminById(req.adminId);
-    if (!admin) return res.status(404).json({ status: 'error', message: 'Admin not found.' });
-
-    const valid = await bcrypt.compare(currentPassword, admin.password_hash);
-    if (!valid) return res.status(401).json({ status: 'error', message: 'Current password incorrect.' });
-
-    const password_hash = await bcrypt.hash(newPassword, 10);
-    await db.updateAdminPassword(req.adminId, password_hash);
+    // Use service key to update password for the authenticated user
+    const { error } = await supabase.auth.admin.updateUserById(req.adminId, { password: newPassword });
+    if (error) return res.status(500).json({ status: 'error', message: error.message });
     res.json({ status: 'success', message: 'Password updated.' });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error.' });
