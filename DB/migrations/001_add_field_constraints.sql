@@ -1,15 +1,20 @@
 -- ============================================================
--- Migration 001 — Add field length constraints to all tables
--- Run after 00_schema.sql
+-- Migration 001 (fixed) — Add field length constraints
+-- Drops RLS policies that depend on altered columns first,
+-- then recreates them after the alter statements.
 -- ============================================================
 
--- admins (no password_hash — Supabase Auth handles authentication)
+-- ── Drop dependent RLS policies first ──────────────────────
+drop policy if exists "Public read published articles" on articles;
+drop policy if exists "Public read active services" on services;
+
+-- ── admins ──────────────────────────────────────────────────
 alter table admins
   alter column email type varchar(254),
   alter column name  type varchar(100),
   alter column role  type varchar(50);
 
--- articles — title max 70 chars enforced
+-- ── articles ────────────────────────────────────────────────
 alter table articles
   alter column title              type varchar(70),
   alter column slug               type varchar(80),
@@ -21,12 +26,12 @@ alter table articles
   alter column seo_title          type varchar(60),
   alter column seo_description    type varchar(160);
 
--- categories
+-- ── categories ──────────────────────────────────────────────
 alter table categories
   alter column name type varchar(100),
   alter column slug type varchar(110);
 
--- services
+-- ── services ────────────────────────────────────────────────
 alter table services
   alter column title   type varchar(100),
   alter column slug    type varchar(110),
@@ -34,7 +39,7 @@ alter table services
   alter column intro   type varchar(1000),
   alter column icon    type varchar(50);
 
--- contact_enquiries
+-- ── contact_enquiries ───────────────────────────────────────
 alter table contact_enquiries
   alter column name            type varchar(100),
   alter column email           type varchar(254),
@@ -44,21 +49,29 @@ alter table contact_enquiries
   alter column message         type varchar(2000),
   alter column status          type varchar(10);
 
--- document_folders
+-- ── document_folders ────────────────────────────────────────
 alter table document_folders
   alter column name type varchar(100);
 
--- documents
+-- ── documents ───────────────────────────────────────────────
 alter table documents
   alter column title  type varchar(150),
   alter column type   type varchar(20),
   alter column status type varchar(10);
 
--- page_views
+-- ── page_views ──────────────────────────────────────────────
 alter table page_views
   alter column path     type varchar(300),
   alter column referrer type varchar(500);
 
--- service_views
+-- ── service_views ───────────────────────────────────────────
 alter table service_views
   alter column service_slug type varchar(110);
+
+-- ── Recreate RLS policies ───────────────────────────────────
+create policy "Public read published articles"
+  on articles for select
+  using (status = 'published' and hidden = false);
+
+create policy "Public read active services"
+  on services for select using (is_active = true);
