@@ -1,5 +1,7 @@
 -- ============================================================
 -- ADQS — Adequate Strategies (Pty) Ltd
+-- Database: adqs-db
+-- Storage Bucket: adqs-storage
 -- Full Database Schema
 -- Run this once on a fresh Supabase project via SQL Editor
 -- ============================================================
@@ -206,6 +208,9 @@ alter table page_views         enable row level security;
 alter table article_clicks     enable row level security;
 alter table service_views      enable row level security;
 
+-- Set up Supabase Storage bucket manually:
+-- Bucket name: adqs-storage
+-- Public: true (for article images and document assets)
 -- ============================================================
 -- Done
 -- ============================================================

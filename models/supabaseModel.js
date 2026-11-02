@@ -229,17 +229,19 @@ module.exports = {
 
   // ─── UPLOADS ──────────────────────────────────────────────
   async uploadFile(buffer, path, mimetype) {
-    const { error } = await supabase.storage.from('article-images').upload(path, buffer, {
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'adqs-storage';
+    const { error } = await supabase.storage.from(bucket).upload(path, buffer, {
       contentType: mimetype,
       upsert: false,
     });
     if (error) return { url: null, error };
-    const { data } = supabase.storage.from('article-images').getPublicUrl(path);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return { url: data.publicUrl, error: null };
   },
 
   async deleteFile(path) {
-    const { error } = await supabase.storage.from('article-images').remove([path]);
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'adqs-storage';
+    const { error } = await supabase.storage.from(bucket).remove([path]);
     return { error };
   },
 
