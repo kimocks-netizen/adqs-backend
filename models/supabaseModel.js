@@ -7,14 +7,18 @@ const supabase = createClient(
 );
 
 // Anon key client — used for Supabase Auth sign-in
-const supabaseAuth = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+// Created lazily to ensure env vars are loaded
+function getAuthClient() {
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY,
+    { auth: { persistSession: false } }
+  );
+}
 
 module.exports = {
   supabase,
-  supabaseAuth,
+  getAuthClient,
 
   // ─── ADMINS ───────────────────────────────────────────────
   async getAdminByEmail(email) {
