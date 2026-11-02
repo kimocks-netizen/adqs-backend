@@ -7,12 +7,13 @@
 
 ## admins
 
-| Column          | Max Length | Notes                        |
-|-----------------|-----------|------------------------------|
-| email           | 254       | RFC 5321 email max           |
-| password_hash   | 72        | bcrypt max input             |
-| name            | 100       |                              |
-| role            | 50        |                              |
+| Column | Max Length | Notes                        |
+|--------|-----------|------------------------------|
+| email  | 254       | RFC 5321 email max           |
+| name   | 100       |                              |
+| role   | 50        |                              |
+
+> `password_hash` removed — Supabase Auth handles authentication.
 
 ---
 

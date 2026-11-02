@@ -3,11 +3,11 @@
 -- Run after 00_schema.sql
 -- ============================================================
 
--- admins
+-- admins (no password_hash — Supabase Auth handles authentication)
 alter table admins
-  alter column email         type varchar(254),
-  alter column name          type varchar(100),
-  alter column role          type varchar(50);
+  alter column email type varchar(254),
+  alter column name  type varchar(100),
+  alter column role  type varchar(50);
 
 -- articles — title max 70 chars enforced
 alter table articles
