@@ -1,16 +1,23 @@
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 const { GoogleAuth } = require('google-auth-library');
 const db = require('../models/supabaseModel');
-const path = require('path');
 
 let analyticsClient = null;
 
 function getAnalyticsClient() {
   if (analyticsClient) return analyticsClient;
   try {
-    const serviceAccount = require(path.resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS || './service.json'));
+    let credentials;
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+      // Vercel — credentials stored as env var
+      credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+    } else {
+      // Local — credentials from service.json file
+      const path = require('path');
+      credentials = require(path.resolve('./service.json'));
+    }
     const auth = new GoogleAuth({
-      credentials: serviceAccount,
+      credentials,
       scopes: ['https://www.googleapis.com/auth/analytics.readonly'],
     });
     analyticsClient = new BetaAnalyticsDataClient({ auth });
