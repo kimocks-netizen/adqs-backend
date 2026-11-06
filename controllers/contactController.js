@@ -88,14 +88,15 @@ exports.submit = async (req, res) => {
     });
     if (error) return res.status(500).json({ status: 'error', message: error.message });
 
-    // Fire emails non-blocking
+    // Send admin notification — await so failures are visible in logs
     const { html: adminHtml, text: adminText } = adminNotificationEmail({ name, email, phone, organisation, area_of_enquiry, message, email_verified: verified });
-    sendEmail({
+    const adminSent = await sendEmail({
       to: process.env.CONTACT_NOTIFY_EMAIL,
       subject: `New Enquiry: ${area_of_enquiry} — ${name}`,
       html: adminHtml,
       text: adminText,
-    }).catch((err) => console.error('[contact] admin notification failed:', err.message));
+    });
+    if (!adminSent) console.error('[contact] admin notification failed to send to', process.env.CONTACT_NOTIFY_EMAIL);
 
     if (verified) {
       const { html: ackHtml, text: ackText } = clientAcknowledgementEmail(name);
