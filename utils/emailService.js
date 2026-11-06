@@ -47,6 +47,9 @@ function adminNotificationEmail({ name, email, phone, organisation, area_of_enqu
     ? `<span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">✓ Verified</span>`
     : `<span style="background:#fff3cd;color:#856404;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">✗ Unverified</span>`;
 
+  const replySubject = encodeURIComponent(`Re: Your ADQS Enquiry — ${area_of_enquiry}`);
+  const replyBody = encodeURIComponent(`Dear ${name},\n\nThank you for your enquiry regarding ${area_of_enquiry}.\n\n`);
+
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
       <div style="background:#1a1a2e;padding:20px 24px;border-radius:6px 6px 0 0;">
@@ -62,11 +65,15 @@ function adminNotificationEmail({ name, email, phone, organisation, area_of_enqu
         </table>
         <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
         <p style="color:#666;font-size:13px;margin:0 0 8px;">Message:</p>
-        <p style="margin:0;white-space:pre-wrap;font-size:14px;">${message}</p>
+        <p style="margin:0 0 24px;white-space:pre-wrap;font-size:14px;">${message}</p>
+        <a href="mailto:${email}?subject=${replySubject}&body=${replyBody}"
+           style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:600;">
+          ↩ Reply to ${name}
+        </a>
       </div>
     </div>`;
 
-  const text = `New Enquiry — ADQS Website\n\nName: ${name}\nEmail: ${email} [${email_verified ? 'Verified' : 'Unverified'}]${phone ? `\nPhone: ${phone}` : ''}${organisation ? `\nOrganisation: ${organisation}` : ''}\nArea of Enquiry: ${area_of_enquiry}\n\nMessage:\n${message}`;
+  const text = `New Enquiry — ADQS Website\n\nName: ${name}\nEmail: ${email} [${email_verified ? 'Verified' : 'Unverified'}]${phone ? `\nPhone: ${phone}` : ''}${organisation ? `\nOrganisation: ${organisation}` : ''}\nArea of Enquiry: ${area_of_enquiry}\n\nMessage:\n${message}\n\nReply directly: mailto:${email}`;
 
   return { html, text };
 }
