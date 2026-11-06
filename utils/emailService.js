@@ -68,12 +68,13 @@ function adminNotificationEmail({ name, email, phone, organisation, area_of_enqu
         <p style="margin:0 0 24px;white-space:pre-wrap;font-size:14px;">${message}</p>
         <a href="mailto:${email}?subject=${replySubject}&body=${replyBody}"
            style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:600;">
-          ↩ Reply to ${name}
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:8px;margin-bottom:2px;"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          Reply to ${name}
         </a>
       </div>
     </div>`;
 
-  const text = `New Enquiry — ADQS Website\n\nName: ${name}\nEmail: ${email} [${email_verified ? 'Verified' : 'Unverified'}]${phone ? `\nPhone: ${phone}` : ''}${organisation ? `\nOrganisation: ${organisation}` : ''}\nArea of Enquiry: ${area_of_enquiry}\n\nMessage:\n${message}\n\nReply directly: mailto:${email}`;
+  const text = `New Enquiry — ADQS Website\n\nName: ${name}\nEmail: ${email} [${email_verified ? 'Verified' : 'Unverified'}]${phone ? `\nPhone: ${phone}` : ''}${organisation ? `\nOrganisation: ${organisation}` : ''}\nArea of Enquiry: ${area_of_enquiry}\n\nMessage:\n${message}\n\nReply directly: ${email}`;
 
   return { html, text };
 }
