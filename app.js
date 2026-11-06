@@ -1,11 +1,50 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 // Prevent unhandled promise rejections from crashing the server
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason);
 });
+
+const app = express();
+
+// ── Security headers ────────────────────────────────────────
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// ── Rate limiting ───────────────────────────────────────────
+// Login — relaxed (no money involved, just content management)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,                   // 20 attempts per 15 min per IP
+  message: { status: 'error', message: 'Too many login attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// General API — generous limit
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500,                  // 500 requests per 15 min per IP
+  message: { status: 'error', message: 'Too many requests. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Public contact form — prevent spam
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,                   // 10 submissions per hour per IP
+  message: { status: 'error', message: 'Too many enquiries submitted. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api', apiLimiter);
+app.use('/api/admin/login', loginLimiter);
+app.use('/api/contact', contactLimiter);
 
 const app = express();
 

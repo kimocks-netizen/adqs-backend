@@ -1,13 +1,19 @@
 const db = require('../models/supabaseModel');
+const { sanitizeFields } = require('../utils/sanitize');
 
 exports.submit = async (req, res) => {
   try {
-    const { name, email, phone, organisation, area_of_enquiry, message } = req.body;
-    if (!name?.trim()) return res.status(400).json({ status: 'error', message: 'Name is required.' });
-    if (!email?.trim()) return res.status(400).json({ status: 'error', message: 'Email is required.' });
+    let { name, email, phone, organisation, area_of_enquiry, message } = req.body;
+
+    // Sanitise all text inputs
+    ({ name, email, phone, organisation, area_of_enquiry, message } =
+      sanitizeFields(req.body, ['name', 'email', 'phone', 'organisation', 'area_of_enquiry', 'message']));
+
+    if (!name) return res.status(400).json({ status: 'error', message: 'Name is required.' });
+    if (!email) return res.status(400).json({ status: 'error', message: 'Email is required.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ status: 'error', message: 'Invalid email address.' });
-    if (!area_of_enquiry?.trim()) return res.status(400).json({ status: 'error', message: 'Area of enquiry is required.' });
-    if (!message?.trim()) return res.status(400).json({ status: 'error', message: 'Message is required.' });
+    if (!area_of_enquiry) return res.status(400).json({ status: 'error', message: 'Area of enquiry is required.' });
+    if (!message) return res.status(400).json({ status: 'error', message: 'Message is required.' });
 
     const { data, error } = await db.createEnquiry({ name, email, phone: phone || null, organisation: organisation || null, area_of_enquiry, message, status: 'New' });
     if (error) return res.status(500).json({ status: 'error', message: error.message });

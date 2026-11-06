@@ -1,4 +1,5 @@
 const db = require('../models/supabaseModel');
+const { sanitizeFields } = require('../utils/sanitize');
 
 function toSlug(title) {
   return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
@@ -48,9 +49,12 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { title, introduction, body, featured_image_url, category, author, status, seo_title, seo_description } = req.body;
-    if (!title) return res.status(400).json({ status: 'error', message: 'Title is required.' });
-    if (title.length > 70) return res.status(400).json({ status: 'error', message: 'Title must be 70 characters or less.' });
+    const { title, introduction, featured_image_url, category, author, status, seo_title, seo_description } = req.body;
+    let { body } = req.body;
+    const sanitized = sanitizeFields(req.body, ['title', 'introduction', 'category', 'author', 'seo_title', 'seo_description']);
+    const safeTitle = sanitized.title;
+    if (!safeTitle) return res.status(400).json({ status: 'error', message: 'Title is required.' });
+    if (safeTitle.length > 70) return res.status(400).json({ status: 'error', message: 'Title must be 70 characters or less.' });
 
     let slug = toSlug(title);
     let suffix = 0;
