@@ -158,6 +158,46 @@ module.exports = {
     return { error };
   },
 
+  // ─── OTP VERIFICATIONS ────────────────────────────────────
+  async deleteExpiredOtps(email) {
+    await supabase.from('otp_verifications').delete().eq('email', email).lt('expires_at', new Date().toISOString());
+  },
+
+  async getRecentOtp(email) {
+    const { data } = await supabase
+      .from('otp_verifications')
+      .select('*')
+      .eq('email', email)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+    return data?.[0] || null;
+  },
+
+  async createOtp(email, code) {
+    const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from('otp_verifications')
+      .insert([{ email, code, expires_at }])
+      .select('*');
+    return { data: data?.[0], error };
+  },
+
+  async incrementOtpAttempts(id) {
+    const { data } = await supabase
+      .from('otp_verifications')
+      .select('attempts')
+      .eq('id', id)
+      .single();
+    const attempts = (data?.attempts || 0) + 1;
+    await supabase.from('otp_verifications').update({ attempts }).eq('id', id);
+    return attempts;
+  },
+
+  async deleteOtp(id) {
+    await supabase.from('otp_verifications').delete().eq('id', id);
+  },
+
   // ─── CONTACT ENQUIRIES ────────────────────────────────────
   async createEnquiry(data) {
     const { data: result, error } = await supabase.from('contact_enquiries').insert([data]).select('*');

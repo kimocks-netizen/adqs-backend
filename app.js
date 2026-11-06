@@ -46,8 +46,6 @@ app.use('/api', apiLimiter);
 app.use('/api/admin/login', loginLimiter);
 app.use('/api/contact', contactLimiter);
 
-const app = express();
-
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'https://adqs.co.za',
