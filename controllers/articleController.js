@@ -66,7 +66,7 @@ exports.create = async (req, res) => {
       author: author || 'Bright Ngwenyama Gunde',
       status: status || 'draft',
       hidden: false,
-      published_at: status === 'published' ? now : null,
+      published_at: status === 'published' ? (req.body.published_at || now) : null,
       seo_title, seo_description,
       created_at: now, updated_at: now,
     });
@@ -90,7 +90,7 @@ exports.update = async (req, res) => {
       while (await db.slugExists(slug, req.params.id)) { suffix++; slug = `${toSlug(title)}-${suffix}`; }
       updates.slug = slug;
     }
-    if (status === 'published') updates.published_at = new Date().toISOString();
+    if (status === 'published') updates.published_at = req.body.published_at || new Date().toISOString();
 
     const { data, error } = await db.updateArticle(req.params.id, updates);
     if (error) return res.status(500).json({ status: 'error', message: error.message });
