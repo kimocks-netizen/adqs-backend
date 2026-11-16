@@ -55,10 +55,10 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { folder_id, title, type, body, status, watermark } = req.body;
+    const { folder_id, title, type, body, status, watermark, document_date } = req.body;
     if (!folder_id || !title || !type) return res.status(400).json({ status: 'error', message: 'folder_id, title and type required.' });
     const now = new Date().toISOString();
-    const { data, error } = await db.createDocument({ folder_id, title, type, body, status: status || 'Draft', watermark: watermark ?? false, created_at: now, updated_at: now });
+    const { data, error } = await db.createDocument({ folder_id, title, type, body, status: status || 'Draft', watermark: watermark ?? false, document_date: document_date || new Date().toISOString().slice(0,10), created_at: now, updated_at: now });
     if (error) return res.status(500).json({ status: 'error', message: error.message });
     res.status(201).json({ status: 'success', data });
   } catch (err) {
