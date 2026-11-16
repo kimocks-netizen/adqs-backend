@@ -34,10 +34,10 @@ exports.removeFolder = async (req, res) => {
 
 exports.getAll = async (req, res) => {
   try {
-    const { folder_id } = req.query;
-    const { data, error } = await db.getDocuments({ folder_id });
+    const { folder_id, page = 1, limit = 10 } = req.query;
+    const { data, error, count } = await db.getDocuments({ folder_id, page: +page, limit: +limit });
     if (error) return res.status(500).json({ status: 'error', message: error.message });
-    res.json({ status: 'success', data });
+    res.json({ status: 'success', data, count });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error.' });
   }

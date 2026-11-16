@@ -244,11 +244,13 @@ module.exports = {
   },
 
   // ─── DOCUMENTS ────────────────────────────────────────────
-  async getDocuments({ folder_id } = {}) {
-    let query = supabase.from('documents').select('*').order('updated_at', { ascending: false });
+  async getDocuments({ folder_id, page = 1, limit = 10 } = {}) {
+    let query = supabase.from('documents').select('*', { count: 'exact' }).order('updated_at', { ascending: false });
     if (folder_id) query = query.eq('folder_id', folder_id);
-    const { data, error } = await query;
-    return { data, error };
+    const from = (page - 1) * limit;
+    query = query.range(from, from + limit - 1);
+    const { data, error, count } = await query;
+    return { data, error, count };
   },
 
   async getDocumentById(id) {
