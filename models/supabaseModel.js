@@ -275,13 +275,11 @@ module.exports = {
 
   // ─── INVOICES ──────────────────────────────────────────────
   async generateInvoiceNumber() {
-    const { data } = await supabase.rpc('nextval', { seq: 'invoice_seq' }).single();
-    // fallback: query sequence directly
     const { data: seq } = await supabase
       .from('invoices')
       .select('invoice_number')
       .like('invoice_number', 'INV-%')
-      .order('created_at', { ascending: false })
+      .order('invoice_number', { ascending: false })
       .limit(1);
     if (seq?.length) {
       const last = parseInt(seq[0].invoice_number.replace('INV-', ''), 10);
@@ -295,7 +293,7 @@ module.exports = {
       .from('invoices')
       .select('invoice_number')
       .like('invoice_number', 'QUO-%')
-      .order('created_at', { ascending: false })
+      .order('invoice_number', { ascending: false })
       .limit(1);
     if (seq?.length) {
       const last = parseInt(seq[0].invoice_number.replace('QUO-', ''), 10);
