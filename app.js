@@ -70,6 +70,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Health check — must be before route mounts
+app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'adqs-backend' }));
+
 // Routes
 const authRoutes       = require('./routes/authRoutes');
 const articleRoutes    = require('./routes/articleRoutes');
@@ -79,6 +82,7 @@ const contactRoutes    = require('./routes/contactRoutes');
 const uploadRoutes     = require('./routes/uploadRoutes');
 const analyticsRoutes  = require('./routes/analyticsRoutes');
 const documentRoutes   = require('./routes/documentRoutes');
+const invoiceRoutes    = require('./routes/invoiceRoutes');
 
 app.use('/api', authRoutes);
 app.use('/api', articleRoutes);
@@ -88,9 +92,7 @@ app.use('/api', contactRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', analyticsRoutes);
 app.use('/api', documentRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'adqs-backend' }));
+app.use('/api', invoiceRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

@@ -273,6 +273,107 @@ module.exports = {
     return { error };
   },
 
+  // ─── INVOICES ──────────────────────────────────────────────
+  async generateInvoiceNumber() {
+    const { data } = await supabase.rpc('nextval', { seq: 'invoice_seq' }).single();
+    // fallback: query sequence directly
+    const { data: seq } = await supabase
+      .from('invoices')
+      .select('invoice_number')
+      .like('invoice_number', 'INV-%')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (seq?.length) {
+      const last = parseInt(seq[0].invoice_number.replace('INV-', ''), 10);
+      return `INV-${String(last + 1).padStart(4, '0')}`;
+    }
+    return 'INV-0001';
+  },
+
+  async generateQuoteNumber() {
+    const { data: seq } = await supabase
+      .from('invoices')
+      .select('invoice_number')
+      .like('invoice_number', 'QUO-%')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (seq?.length) {
+      const last = parseInt(seq[0].invoice_number.replace('QUO-', ''), 10);
+      return `QUO-${String(last + 1).padStart(4, '0')}`;
+    }
+    return 'QUO-0001';
+  },
+
+  async createInvoice(invoiceData, items = []) {
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert([invoiceData])
+      .select('*');
+    if (error || !data?.[0]) return { data, error };
+
+    if (items.length) {
+      const rows = items.map(i => ({ invoice_id: data[0].id, description: i.description, amount: parseFloat(i.amount) || 0 }));
+      await supabase.from('invoice_items').insert(rows);
+    }
+    return { data, error: null };
+  },
+
+  async getInvoices({ page = 1, limit = 20, type, status, search } = {}) {
+    let query = supabase
+      .from('invoices')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false });
+    if (type)   query = query.eq('document_type', type);
+    if (status) query = query.eq('status', status);
+    if (search) query = query.or(`customer_name.ilike.%${search}%,invoice_number.ilike.%${search}%`);
+    const from = (page - 1) * limit;
+    query = query.range(from, from + limit - 1);
+    const { data, error, count } = await query;
+    return { data, error, count };
+  },
+
+  async getInvoiceById(id) {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*, invoice_items(*)')
+      .eq('id', id)
+      .single();
+    return { data, error };
+  },
+
+  async updateInvoice(id, fields) {
+    const { data, error } = await supabase
+      .from('invoices')
+      .update(fields)
+      .eq('id', id)
+      .select('*');
+    return { data, error };
+  },
+
+  async replaceInvoiceItems(invoiceId, items) {
+    await supabase.from('invoice_items').delete().eq('invoice_id', invoiceId);
+    if (!items.length) return;
+    const rows = items.map(i => ({ invoice_id: invoiceId, description: i.description, amount: parseFloat(i.amount) || 0 }));
+    await supabase.from('invoice_items').insert(rows);
+  },
+
+  async convertDocument(id, newType) {
+    const newNumber = newType === 'quote'
+      ? await this.generateQuoteNumber()
+      : await this.generateInvoiceNumber();
+    const { data, error } = await supabase
+      .from('invoices')
+      .update({ document_type: newType, invoice_number: newNumber, status: 'draft' })
+      .eq('id', id)
+      .select('*');
+    return { data, error };
+  },
+
+  async deleteInvoice(id) {
+    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    return { error };
+  },
+
   // ─── UPLOADS ──────────────────────────────────────────────
   async uploadFile(buffer, path, mimetype) {
     const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'adqs-storage';
