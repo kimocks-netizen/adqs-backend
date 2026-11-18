@@ -13,6 +13,11 @@ module.exports = {
 
       if (!customer_name) return res.status(400).json({ status: 'error', message: 'customer_name is required' });
       if (!invoice_date)  return res.status(400).json({ status: 'error', message: 'invoice_date is required' });
+      if (customer_name.length > 100) return res.status(400).json({ status: 'error', message: 'customer_name must be 100 characters or less.' });
+      if (customer_phone && customer_phone.length > 20) return res.status(400).json({ status: 'error', message: 'customer_phone must be 20 characters or less.' });
+      if (matter_reference && matter_reference.length > 50) return res.status(400).json({ status: 'error', message: 'matter_reference must be 50 characters or less.' });
+      if (notes && notes.length > 1000) return res.status(400).json({ status: 'error', message: 'notes must be 1000 characters or less.' });
+      if (items.some((i: {description: string}) => i.description?.length > 300)) return res.status(400).json({ status: 'error', message: 'Item description must be 300 characters or less.' });
 
       const invoice_number = document_type === 'quote'
         ? await db.generateQuoteNumber()

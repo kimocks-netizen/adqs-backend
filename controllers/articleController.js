@@ -55,6 +55,9 @@ exports.create = async (req, res) => {
     const safeTitle = sanitized.title;
     if (!safeTitle) return res.status(400).json({ status: 'error', message: 'Title is required.' });
     if (safeTitle.length > 70) return res.status(400).json({ status: 'error', message: 'Title must be 70 characters or less.' });
+    if (sanitized.seo_title && sanitized.seo_title.length > 60) return res.status(400).json({ status: 'error', message: 'SEO title must be 60 characters or less.' });
+    if (sanitized.seo_description && sanitized.seo_description.length > 160) return res.status(400).json({ status: 'error', message: 'SEO description must be 160 characters or less.' });
+    if (sanitized.introduction && sanitized.introduction.length > 300) return res.status(400).json({ status: 'error', message: 'Introduction must be 300 characters or less.' });
 
     let slug = toSlug(title);
     let suffix = 0;
