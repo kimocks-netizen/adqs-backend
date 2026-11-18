@@ -1,4 +1,5 @@
 const db = require('../models/supabaseModel');
+const { sanitizeFields } = require('../utils/sanitize');
 
 exports.getFolders = async (req, res) => {
   try {
@@ -12,7 +13,7 @@ exports.getFolders = async (req, res) => {
 
 exports.createFolder = async (req, res) => {
   try {
-    const { name, parent_id } = req.body;
+    const { name, parent_id } = sanitizeFields(req.body, ['name']);
     if (!name) return res.status(400).json({ status: 'error', message: 'Folder name required.' });
     const { data, error } = await db.createFolder({ name, parent_id: parent_id || null });
     if (error) return res.status(500).json({ status: 'error', message: error.message });
@@ -55,7 +56,8 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { folder_id, title, type, body, status, watermark, document_date } = req.body;
+    const { folder_id, type, status, watermark, document_date } = req.body;
+    const { title, body } = sanitizeFields(req.body, ['title']);
     if (!folder_id || !title || !type) return res.status(400).json({ status: 'error', message: 'folder_id, title and type required.' });
     const now = new Date().toISOString();
     const { data, error } = await db.createDocument({ folder_id, title, type, body, status: status || 'Draft', watermark: watermark ?? false, document_date: document_date || new Date().toISOString().slice(0,10), created_at: now, updated_at: now });
@@ -68,7 +70,10 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const { data, error } = await db.updateDocument(req.params.id, { ...req.body, updated_at: new Date().toISOString() });
+    const { title } = sanitizeFields(req.body, ['title']);
+    const updates = { ...req.body, updated_at: new Date().toISOString() };
+    if (title) updates.title = title;
+    const { data, error } = await db.updateDocument(req.params.id, updates);
     if (error) return res.status(500).json({ status: 'error', message: error.message });
     res.json({ status: 'success', data });
   } catch (err) {

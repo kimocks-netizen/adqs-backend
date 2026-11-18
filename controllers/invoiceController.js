@@ -1,14 +1,15 @@
 const db = require('../models/supabaseModel');
+const { sanitizeFields } = require('../utils/sanitize');
 
 module.exports = {
   async createInvoice(req, res) {
     try {
+      const sanitized = sanitizeFields(req.body, ['customer_name', 'customer_email', 'customer_phone', 'matter_reference', 'notes']);
       const {
         document_type = 'invoice',
-        customer_name, customer_email, customer_phone,
-        matter_reference, invoice_date, due_date,
-        notes, items = [],
+        invoice_date, due_date, items = [],
       } = req.body;
+      const { customer_name, customer_email, customer_phone, matter_reference, notes } = sanitized;
 
       if (!customer_name) return res.status(400).json({ status: 'error', message: 'customer_name is required' });
       if (!invoice_date)  return res.status(400).json({ status: 'error', message: 'invoice_date is required' });
@@ -69,7 +70,8 @@ module.exports = {
 
   async updateInvoice(req, res) {
     try {
-      const { items, ...fields } = req.body;
+      const { items, ...rest } = req.body;
+      const fields = sanitizeFields(rest, ['customer_name', 'customer_email', 'customer_phone', 'matter_reference', 'notes']);
 
       // Recalculate totals if items are being updated
       if (items) {
