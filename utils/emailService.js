@@ -14,7 +14,7 @@ async function sendEmail({ to, subject, html, text }) {
       {
         method: 'POST',
         headers: headers(),
-        body: JSON.stringify({ to: [to], displayName: 'ADQS', subject, html, text }),
+        body: JSON.stringify({ to: [to], from: 'admin@adqs.co.za', displayName: 'Adequate Strategies', subject, html, text }),
       }
     );
     return res.status === 204;
